@@ -1,0 +1,32 @@
+name: Daily rebuild
+
+# Rebuilds the site once a day, so the build-time copy of robotiq/.github's
+# profile/README.md (what search engines, no-JS and rate-limited visitors
+# see on the Software Tools page) is never more than a day old, even when
+# this repo doesn't change.
+#
+# Kept separate from deploy.yml on purpose: in a public repo GitHub disables
+# a workflow with a `schedule:` trigger after 60 days without commits, and a
+# disabled workflow stops running on every trigger. Here that only pauses
+# this daily refresh (re-enable it from the Actions tab); deploys on push
+# keep working.
+#
+# A workflow_dispatch created with GITHUB_TOKEN does start a new run (one of
+# the exceptions to GitHub's "no runs from GITHUB_TOKEN events" rule), so no
+# extra token or permission outside this repo is needed.
+on:
+  schedule:
+    - cron: '30 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+jobs:
+  trigger-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger deploy.yml
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy.yml --repo "${{ github.repository }}" --ref main

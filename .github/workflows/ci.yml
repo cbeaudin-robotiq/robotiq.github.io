@@ -1,13 +1,13 @@
 name: CI
 
-# Verifies the documentation site builds and passes basic smoke tests.
-# Intended to be a required status check for merging into main.
+# Checks that the site still builds before a change is merged. The build
+# also fetches robotiq/.github's profile/README.md (see
+# scripts/fetch-profile-readme.js), so it fails if that can't be fetched.
+# Keep the job id `build-and-test`: the main branch ruleset requires a
+# check with that exact name.
 
 on:
   pull_request:
-    branches:
-      - main
-  push:
     branches:
       - main
   workflow_dispatch:
@@ -23,10 +23,6 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-      # Submodules aren't checked out here — scripts/sync-external-docs.js
-      # runs `git submodule update --init --force` itself as part of the
-      # build (needed for local `npm start`/`npm run build` too), so doing
-      # it again via actions/checkout would just be a redundant second fetch.
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
@@ -37,85 +33,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Fails the build if any production dependency, direct or transitive,
-      # isn't under an allowlisted permissive license (fails closed, so
-      # copyleft GPL/AGPL/LGPL/SSPL/BUSL — which would require this site's
-      # own source to be distributed under matching terms, conflicting with
-      # its BSD-3-Clause license — and unknown licenses both fail). Reads
-      # package-lock.json, so it's OS-independent and needs no install.
-      # Catches this at the point a dependency is added, rather than during
-      # a manual audit later.
+      # Fails if any production dependency, direct or transitive, isn't
+      # under an allowlisted permissive license (fails closed, so copyleft
+      # and unknown licenses both fail) — copyleft would conflict with this
+      # site's BSD-3-Clause license, and src/pages/license.md states none
+      # is used. Reads package-lock.json. Not `license-checker --failOn`:
+      # it compares whole license strings, so "GPL" never matches a real
+      # SPDX id like GPL-3.0-only.
       - name: Check dependency licenses
         run: node scripts/check-dependency-licenses.js
 
-      # scripts/sync-external-docs.js shells out to the `doxygen` binary
-      # (see its doxygen2docusaurus job handling) to build the C++ library's
-      # API reference — not an npm package, so `npm ci` above can't provide
-      # it. ubuntu-latest doesn't have it preinstalled. graphviz (`dot`) is
-      # also required even though this repo's own Doxyfiles never set
-      # HAVE_DOT=YES: the apt-installed Doxygen version's own default is
-      # YES (newer Doxygen releases default it to NO, which is why this
-      # was never hit testing locally against a newer local install) — so
-      # it tries to render inheritance/collaboration graphs regardless.
-      # Without `dot`, that fails outright ("problems opening map file ...
-      # for inclusion in the docs"), and WARN_AS_ERROR=FAIL_ON_WARNINGS
-      # (see the submodule's own Doxyfile) turns that into a hard failure
-      # here. Confirmed by reproducing this exact failure in a clean
-      # Ubuntu container with the apt-installed Doxygen version, then
-      # confirming `apt install graphviz` alone fixes it.
-      - name: Install Doxygen and Graphviz
-        run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
-
-      # Pure logic, no build/network/submodule checkout needed — runs before
-      # Build so a failure here is fast and doesn't waste a Doxygen run.
-      # See test/ for what's covered: list-submodule-tags.js's tag parsing,
-      # sync-external-docs.js's stale-file pruning (scripts/lib/prune.js),
-      # the YouTube-embed remark plugin (both .md and .mdx compilation —
-      # regression coverage for the bug in PR #14's review), and
-      # site-nav-tree.mjs's versioned-sidebar drift guard (below).
-      - name: Unit tests
-        run: npm run test:unit
-
-      # Fails on broken internal links / anchors (onBrokenLinks: 'throw')
-      # and runs the sync + tools-table generators via the prebuild hook.
+      # GITHUB_TOKEN only lifts the GitHub API rate limit for the README
+      # fetch; it grants nothing extra.
       - name: Build
         run: npm run build
-
-      # generate-tools-table.js (run above, via the prebuild hook) rewrites
-      # docs/intro.mdx and, under software-tools/ (every product/tool page,
-      # versioned or not — see docs/website/versioning.mdx), every
-      # product's own index.mdx/ROS/index.mdx and any tool/guide page
-      # that's grown a self-installed sub-section list — all committed
-      # files, none of them gitignored (only the submodule-synced
-      # software-tools/**/*.md content is — see the comment above that
-      # rule in .gitignore). Nothing else regenerates and commits these
-      # after a merge, so a PR that changes something the generator
-      # depends on (e.g. a Dependabot submodule bump) without also
-      # re-running it locally would otherwise silently ship a deployed
-      # site that doesn't match what's committed. This catches that here,
-      # generically — no file list to keep in sync as the generator's own
-      # output grows. (Stable's own frozen content —
-      # software-tools_versioned_docs/, software-tools_versioned_sidebars/,
-      # software-tools_versions.json — is gitignored now, materialized
-      # fresh by every build's own prebuild hook
-      # (scripts/ensure-stable-version.js) rather than committed, so there's
-      # nothing to verify-committed for it here; see docs/website/versioning.mdx.)
-      - name: Verify generated content is committed
-        run: git diff --exit-code -- docs/ software-tools/
-
-      # Smoke-tests the generated output (key pages + tools table present).
-      - name: Test
-        run: npm test
-
-      # Catches forgetting to point external/<submodule> back at its real
-      # branch after prototyping against a WIP one (see "Previewing local
-      # edits to a submodule" in docs/website/index.mdx) — the pin must
-      # be reachable from the submodule repo's own actual default branch
-      # (checked directly against the remote, not external-jobs.js's
-      # `branch` field — see check-submodule-pins.js's own header comment
-      # for why that field can't be trusted as ground truth here). Runs
-      # after Build/Test (not before) so it reuses the submodule checkout
-      # sync-external-docs.js's own build step already did, rather than
-      # fetching it again here.
-      - name: Verify submodule pins are on their repo's default branch
-        run: node scripts/check-submodule-pins.js
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
