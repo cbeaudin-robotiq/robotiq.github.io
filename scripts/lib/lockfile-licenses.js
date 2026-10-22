@@ -1,11 +1,9 @@
 // Shared reader for the license data npm already records in
-// package-lock.json, used by check-dependency-licenses.js (the CI gate) and
-// generate-third-party-notices.js (the docs page). Reading the lockfile —
-// not the installed node_modules tree — keeps both OS-independent: the
-// lockfile lists every platform's optional native binaries (rspack/swc/
-// lightningcss...) whichever OS wrote it, whereas node_modules only holds
-// the current OS's set, so a tree walk produces different output on
-// Windows vs. CI's Ubuntu.
+// package-lock.json, used by check-dependency-licenses.js (the CI gate).
+// Reading the lockfile — not the installed node_modules tree — keeps it
+// OS-independent: the lockfile lists every platform's optional native
+// binaries (rspack/swc/lightningcss...) whichever OS wrote it, whereas
+// node_modules only holds the current OS's set.
 const fs = require('node:fs');
 const path = require('node:path');
 

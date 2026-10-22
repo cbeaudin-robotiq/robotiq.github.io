@@ -1,4 +1,3 @@
-import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
@@ -17,8 +16,8 @@ function HomepageHeader() {
         <p className={styles.heroSubtitle}>{siteConfig.tagline}</p>
         <div className={styles.buttons}>
           <Link
-            className={clsx('button button--lg', styles.heroButton)}
-            to="/docs/intro">
+            className={`button button--lg ${styles.heroButton}`}
+            to="/software-tools">
             Get Started
           </Link>
         </div>

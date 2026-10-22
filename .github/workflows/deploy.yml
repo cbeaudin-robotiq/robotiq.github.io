@@ -1,16 +1,16 @@
 name: Deploy to GitHub Pages
 
+# Runs on every push to main, and daily via rebuild-daily.yml. Visitors see
+# README changes without a rebuild (the Software Tools page fetches the latest
+# robotiq/.github profile/README.md in their browser, see
+# src/pages/software-tools.js); the daily rebuild keeps the build-time copy
+# used as a fallback no more than a day old. No `schedule:` here: see
+# rebuild-daily.yml for why.
 on:
   push:
     branches:
       - main
   workflow_dispatch:
-  # Backstop only: pushes to main (including Dependabot auto-merges, see
-  # dependabot-auto-merge.yml) are the normal trigger. This catches any
-  # merge path that ever fails to fire `push` again, within a day. It
-  # rebuilds even when main hasn't changed, which is harmless.
-  schedule:
-    - cron: '30 6 * * *'
 
 permissions:
   contents: read
@@ -25,10 +25,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # Submodules aren't checked out here — scripts/sync-external-docs.js
-      # runs `git submodule update --init --force` itself as part of the
-      # build, so doing it again via actions/checkout would just be a
-      # redundant second fetch.
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
@@ -39,14 +35,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # scripts/sync-external-docs.js shells out to the `doxygen` binary to
-      # build the C++ library's API reference, and needs graphviz (`dot`) too —
-      # see the matching step in ci.yml for why both are required.
-      - name: Install Doxygen and Graphviz
-        run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
-
+      # GITHUB_TOKEN only lifts the GitHub API rate limit for the README
+      # fetch in scripts/fetch-profile-readme.js (shared runner IPs can hit
+      # the unauthenticated 60 requests/hour); it grants nothing extra.
       - name: Build
         run: npm run build
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

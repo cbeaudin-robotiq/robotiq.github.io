@@ -1,16 +1,15 @@
-import clsx from 'clsx';
 import Heading from '@theme/Heading';
 import styles from './styles.module.css';
 
 const FeatureList = [
   {
     title: 'Sense',
-    subtitle: 'FT300-S · TFS85',
+    subtitle: 'FT300-S · TSF85',
     description:
       'Detect contact forces, torques, and tactile feedback to give your robot a precise sense of touch.',
     images: [
       { src: '/img/FT-300-S_3Drender_white-background.png', alt: 'FT300-S Force Torque Sensor' },
-      { src: '/img/TSF85 tactile finger 2.png', alt: 'TFS85 Tactile Sensor' },
+      { src: '/img/TSF85 tactile finger 2.png', alt: 'TSF85 Tactile Sensor' },
     ],
     variant: 'product',
   },
@@ -32,7 +31,7 @@ const FeatureList = [
     description:
       'Connect Robotiq hardware to any robot controller using the C++ or Python library, or ROS2 packages.',
     images: [
-      { src: '/img/C++-Logo.wine.png', alt: 'C++' },
+      { src: '/img/cpp_logo.svg', alt: 'C++' },
       { src: '/img/python-logo-master-v3-TM-flattened.png', alt: 'Python' },
       { src: '/img/ros2.webp', alt: 'ROS2' },
     ],
@@ -42,7 +41,7 @@ const FeatureList = [
 
 function Feature({ title, subtitle, description, images, variant }) {
   return (
-    <div className={clsx('col col--4')}>
+    <div className="col col--4">
       <div className={styles.featureCard}>
         <div
           className={styles.imageArea}

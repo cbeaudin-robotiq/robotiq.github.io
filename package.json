@@ -1,42 +1,30 @@
 {
-  "name": "my-website",
+  "name": "robotiq.github.io",
   "version": "0.0.0",
   "private": true,
   "license": "BSD-3-Clause",
   "scripts": {
     "docusaurus": "docusaurus",
-    "generate": "node scripts/sync-external-docs.js && node scripts/check-doc-snippets.js && node scripts/generate-tools-table.js && node scripts/generate-third-party-notices.js && node scripts/ensure-stable-version.js",
-    "preview": "node scripts/preview-external-docs.js && node scripts/check-doc-snippets.js && node scripts/generate-tools-table.js && node scripts/generate-third-party-notices.js && node scripts/ensure-stable-version.js",
+    "generate": "node scripts/fetch-profile-readme.js",
     "prestart": "npm run generate",
-    "start": "cross-env NODE_OPTIONS=--max-old-space-size=8192 docusaurus start",
+    "start": "docusaurus start",
     "prebuild": "npm run generate",
     "build": "docusaurus build",
-    "test:unit": "node scripts/run-unit-tests.js",
-    "test": "node scripts/check-build.js",
     "swizzle": "docusaurus swizzle",
     "clear": "docusaurus clear",
-    "serve": "docusaurus serve",
-    "write-translations": "docusaurus write-translations",
-    "write-heading-ids": "docusaurus write-heading-ids"
+    "serve": "docusaurus serve"
   },
   "dependencies": {
     "@docusaurus/core": "^3.10.2",
     "@docusaurus/faster": "^3.10.2",
-    "@docusaurus/plugin-client-redirects": "^3.10.2",
     "@docusaurus/preset-classic": "^3.10.2",
-    "@docusaurus/theme-mermaid": "^3.10.2",
     "@mdx-js/react": "^3.0.0",
-    "clsx": "^2.0.0",
-    "prism-react-renderer": "^2.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "^3.10.2",
-    "@docusaurus/types": "3.10.1",
-    "@xpack/doxygen2docusaurus": "^2.2.2",
-    "cross-env": "^10.1.0",
-    "gray-matter": "^4.0.3"
+    "@docusaurus/types": "^3.10.2"
   },
   "browserslist": {
     "production": [
