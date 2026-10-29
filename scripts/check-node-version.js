@@ -2,11 +2,13 @@
 // CVE-2026-111497 ("Node2Shell"): a crafted Brotli stream can corrupt
 // memory in whatever decompresses it, and the build decompresses one —
 // fetch() in fetch-profile-readme.js accepts `Content-Encoding: br`.
-// Runs first in ci.yml and deploy.yml, before anything touches the network.
+// Runs first in ci.yml and deploy.yml (before npm ci),
+// and again via npm run generate.
 //
 // Only release lines with a fix are accepted, each from its first fixed
 // version. Node 20 never got a fix, and odd lines (23, 25) are end of life.
-// To move to a new line, add its first fixed version here.
+// To move to a new line, add its first fixed version here, then update
+// engines in package.json and .nvmrc.
 // https://www.aikido.dev/blog/python-packages-vulnerable-node2shell-brotli-cve-2026-111497
 
 const FIXED = {
@@ -33,5 +35,3 @@ if (require.main === module) {
   }
   console.log(`check-node-version.js: Node ${process.version} is not affected by CVE-2026-111497`);
 }
-
-module.exports = {isFixed};
